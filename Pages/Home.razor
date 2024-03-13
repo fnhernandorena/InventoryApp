@@ -1,0 +1,223 @@
+﻿@page "/"
+
+<Head />
+<br />
+<br />
+<br />
+<br />
+<br />
+<EditForm Model="mySell">
+    <div class="row">
+        <div class="col-3">
+            <InputText @bind-Value=mySell.name class="form-control" placeholder="Client name"></InputText>
+        </div>
+        <div class="col-3">
+            <InputNumber @bind-Value=mySell.price class="form-control" placeholder="Value"></InputNumber>
+        </div>
+        <div class="col-3">
+            <InputSelect @bind-Value=mySell.transfer class="form-control">
+                <option value="0">Cash</option>
+                <option value="1">Transfer</option>
+            </InputSelect>
+        </div>
+        <div class="col-3"><button type="submit" class="btn btn-success" @onclick="(()=>Save(mySell))">Save</button></div>
+    </div>
+</EditForm>
+
+<br />
+
+<div class="row">
+    <div class="col-8">
+        <table class="table table-success table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Id</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Product value</th>
+                    <th scope="col">Payment method</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var sell in sells)
+                {
+                    <tr>
+                        <td>@sell.id</td>
+                        <td>@sell.date</td>
+                        <td>@sell.name</td>
+                        <td>@sell.price</td>
+                        <td>@if(sell.transfer == 0)
+                            {
+                                @:Cash
+                            }
+                            else
+                            {
+                                @:Transfer
+                            }
+                        </td>
+                        <td><button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" @onclick="(()=>Edit(sell))"><i class="bi bi-pen"></i></button> <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#exampleModalDelete" @onclick="(()=>CallDelete(sell))"><i class="bi bi-trash-fill"></i></button></td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="col-4">
+        <section id="services" class="services section-bg">
+            <div class="container">
+                <div class="row" style="display:flex;justify-content:center">
+                    <div class="col-lg-12">
+                        <div class="row" style="display:flex;justify-content:center">
+                            <div class="col-md-6 d-flex aling-items-stretch mt-4 mt-lg-0" style="display:flex;justify-content:center">
+                                <div class="icon-box" data-aos="zoom-in" data-aos-delay="200">
+                                    <div class="icon"><i class="bx bx-file"></i></div>
+                                    <h4>Resume</h4>
+                                    <p>Cash $@totalCash</p> <br />
+                                    <p>Transfer $@totalTransfer</p> <br />
+                                    <p>Total $@totalMoney</p> <br />
+                                    <p>Sells number: @sellsNumber</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Edit sell</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <EditForm Model="editMySell">
+                    <p>Date</p>
+                    <InputDate @bind-Value=editMySell.date class="form-control"></InputDate>
+                    <p>Name</p>
+                    <InputText @bind-Value=editMySell.name class="form-control"></InputText>
+                    <p>Value</p>
+                    <InputNumber @bind-Value=editMySell.price class="form-control"></InputNumber>
+                    <p>Payment method</p>
+                    <InputSelect @bind-Value=editMySell.transfer class="form-control">
+                        <option value="0">Cash</option>
+                        <option value="1">Transfer</option>
+                    </InputSelect>
+
+                </EditForm>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="(()=>SaveChanges(editMySell))">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Delte -->
+<div class="modal fade" id="exampleModalDelete" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Really you want delete this?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="(()=>Delete(editMySell))">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Sell> sells = new List<Sell>();
+    Sell mySell = new Sell();
+    Sell editMySell = new Sell();
+    Double? totalMoney =0;
+    Double? totalCash=0;
+    Double? totalTransfer=0;
+    int? sellsNumber=0;
+
+    void Save(Sell mySell)
+    {
+        Sell NewSell = new Sell();
+        NewSell.id = sells.Count() + 1;
+        NewSell.date = DateTime.Now;
+        NewSell.name = mySell.name;
+        NewSell.price = mySell.price;
+        NewSell.transfer = mySell.transfer;
+
+        sells.Add(NewSell);
+
+        mySell.name = "";
+        mySell.date = DateTime.Now;
+        mySell.price = 0;
+        CalculateTotals();
+    }
+
+    void Edit(Sell mySell)
+    {
+        editMySell.id = mySell.id;
+        editMySell.date = mySell.date;
+        editMySell.name = mySell.name;
+        editMySell.price = mySell.price;
+        editMySell.transfer = mySell.transfer;
+    }
+
+    void SaveChanges(Sell mySell)
+    {
+        Sell NewSell = new Sell();
+        NewSell.id = editMySell.id;
+        NewSell.date = editMySell.date;
+        NewSell.name = editMySell.name;
+        NewSell.price = editMySell.price;
+        NewSell.transfer = editMySell.transfer;
+
+        var sellDelete = sells.Where(x => x.id == mySell.id).FirstOrDefault();
+        sells.Remove(sellDelete);
+        sells.Add(NewSell);
+        sells = sells.OrderBy(x => x.id).ToList();
+        CalculateTotals();
+    }
+
+    void CallDelete(Sell mySell)
+    {
+        editMySell = mySell;
+    }
+
+    void Delete(Sell mySell)
+    {
+        var sellDelete = sells.Where(x => x.id == mySell.id).FirstOrDefault();
+        sells.Remove(sellDelete);
+        CalculateTotals();
+    }
+
+    void CalculateTotals()
+    {
+        totalCash = 0;
+        totalMoney = 0;
+        totalTransfer = 0;
+        foreach(var sell in sells)
+        {
+            totalMoney = totalMoney + sell.price;  
+            if(sell.transfer==0)
+            {
+                totalCash = totalCash + sell.price;
+            } else
+            {
+                totalTransfer = totalTransfer + sell.price;
+            }
+        }
+        sellsNumber = sells.Count();
+    }
+}
